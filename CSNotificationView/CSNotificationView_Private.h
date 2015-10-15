@@ -18,6 +18,7 @@ static NSString * kCSNavigationBarBoundsKeyPath = @"parentNavigationController.n
 
 @protocol CSNotificationViewBlurViewProtocol <NSObject>
 
+@optional
 ///The tint of the blur view
 - (void)setBlurTintColor:(UIColor*)tintColor;
 

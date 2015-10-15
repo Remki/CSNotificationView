@@ -64,7 +64,16 @@ typedef void(^CSVoidBlock)();
  * the parent view controller's view for presentation.
  * @param viewController The view controller in which the notification shall be presented.
  */
-- (instancetype)initWithParentViewController:(UIViewController*)viewController NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithParentViewController:(UIViewController*)viewController;
+
+/**
+ * Why initialize with the view controller?
+ * CSNotificationView stays visible if `viewController` is pushed off the UINavigationController stack.
+ * Furthermore, presentation in a UITableViewController is not possible so CSNotificationView uses
+ * the parent view controller's view for presentation.
+ * @param viewController The view controller in which the notification shall be presented.
+ */
+- (instancetype)initWithParentViewControllerWithoutBlur:(UIViewController*)viewController;
 
 #pragma mark - presentation
 

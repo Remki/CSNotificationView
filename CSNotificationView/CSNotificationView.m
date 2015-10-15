@@ -11,6 +11,7 @@
 
 #import "CSLayerStealingBlurView.h"
 #import "CSNativeBlurView.h"
+#import "CSColorView.h"
 
 @implementation CSNotificationView
 
@@ -100,46 +101,38 @@
 
 #pragma mark - lifecycle
 
-- (instancetype)initWithParentViewController:(UIViewController*)viewController
+- (instancetype)initWithParentViewController:(UIViewController *)viewController blurView:(UIView<CSNotificationViewBlurViewProtocol> *)blurView
 {
     self = [super initWithFrame:CGRectZero];
     if (self) {
-        
+
         self.backgroundColor = [UIColor clearColor];
-        
+
         //Blur view
         {
-            
-            if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_7_1) {
-                //Use native effects
-                self.blurView = [[CSNativeBlurView alloc] initWithFrame:CGRectZero];
-            } else {
-                //Use layer stealing
-                self.blurView = [[CSLayerStealingBlurView alloc] initWithFrame:CGRectZero];
-            }
-            
+            self.blurView = blurView;
             self.blurView.userInteractionEnabled = NO;
             self.blurView.translatesAutoresizingMaskIntoConstraints = NO;
             self.blurView.clipsToBounds = NO;
             [self insertSubview:self.blurView atIndex:0];
-            
+
         }
-        
+
         //Parent view
         {
             self.parentViewController = viewController;
-            
+
             NSAssert(!([self.parentViewController isKindOfClass:[UITableViewController class]] && !self.parentViewController.navigationController), @"Due to a bug in iOS 7.0.1|2|3 UITableViewController, CSNotificationView cannot present in UITableViewController without a parent UINavigationController");
-            
+
             if (self.parentViewController.navigationController) {
                 self.parentNavigationController = self.parentViewController.navigationController;
             }
             if ([self.parentViewController isKindOfClass:[UINavigationController class]]) {
                 self.parentNavigationController = (UINavigationController*)self.parentViewController;
             }
-            
+
         }
-        
+
         //Notifications
         {
             [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(navigationControllerWillShowViewControllerNotification:) name:kCSNotificationViewUINavigationControllerWillShowViewControllerNotification object:nil];
@@ -150,25 +143,25 @@
         {
             [self addObserver:self forKeyPath:kCSNavigationBarBoundsKeyPath options:NSKeyValueObservingOptionNew context:kCSNavigationBarObservationContext];
         }
-        
+
         //Content views
         {
             //textLabel
             {
                 _textLabel = [[UILabel alloc] init];
-                
+
                 _textLabel.textColor = [UIColor whiteColor];
                 _textLabel.backgroundColor = [UIColor clearColor];
                 _textLabel.translatesAutoresizingMaskIntoConstraints = NO;
-            
+
                 _textLabel.numberOfLines = 2;
                 _textLabel.minimumScaleFactor = 0.6;
                 _textLabel.lineBreakMode = NSLineBreakByTruncatingTail;
-                
+
                 UIFontDescriptor* textLabelFontDescriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
                 _textLabel.font = [UIFont fontWithDescriptor:textLabelFontDescriptor size:17.0f];
                 _textLabel.adjustsFontSizeToFitWidth = YES;
-                
+
                 [self addSubview:_textLabel];
             }
             //symbolView
@@ -176,7 +169,7 @@
                 [self updateSymbolView];
             }
         }
-        
+
         //Interaction
         {
             //Tap gesture
@@ -185,9 +178,27 @@
         }
 
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleBottomMargin;
-        
+
     }
     return self;
+}
+
+- (instancetype)initWithParentViewControllerWithoutBlur:(UIViewController *)viewController
+{
+    return [self initWithParentViewController:viewController blurView:[[CSColorView alloc] init]];
+}
+
+- (instancetype)initWithParentViewController:(UIViewController*)viewController
+{
+    UIView<CSNotificationViewBlurViewProtocol> *blurView;
+    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_7_1) {
+        //Use native effects
+        blurView = [[CSNativeBlurView alloc] initWithFrame:CGRectZero];
+    } else {
+        //Use layer stealing
+        blurView = [[CSLayerStealingBlurView alloc] initWithFrame:CGRectZero];
+    }
+    return [self initWithParentViewController:viewController blurView:blurView];
 }
 
 - (void)dealloc
